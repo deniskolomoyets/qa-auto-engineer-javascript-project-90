@@ -1,4 +1,6 @@
 
+import { expect } from '@playwright/test';
+
 export default class BasePage {
   constructor(page) {
     this.page = page;
@@ -27,5 +29,26 @@ export default class BasePage {
 
   async clickDeleteUser() {
     await this.deleteUserBtn.click();
+  }
+
+  // Общие методы для работы с формами пользователей
+  async fillUserForm(userRegData) {
+    const { email, firstName, lastName } = userRegData;
+    await this.emailInput.fill(email);
+    await this.firstNameInput.fill(firstName);
+    await this.lastNameInput.fill(lastName);
+  }
+
+  async checkUserFormIsVisible() {
+    await expect(this.emailInput).toBeVisible();
+    await expect(this.firstNameInput).toBeVisible();
+    await expect(this.lastNameInput).toBeVisible();
+    await expect(this.saveUserBtn).toBeVisible();
+  }
+
+  async checkUserFormValues(email, firstName, lastName) {
+    expect(await this.emailInput.getAttribute('value')).toContain(email);
+    expect(await this.firstNameInput.getAttribute('value')).toContain(firstName);
+    expect(await this.lastNameInput.getAttribute('value')).toContain(lastName);
   }
 }

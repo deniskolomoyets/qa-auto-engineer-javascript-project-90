@@ -6,10 +6,7 @@ export default class CreateUserPage extends BasePage {
     super(page);
   }
   async createUser(userRegData) {
-    const { email, firstName, lastName } = userRegData;
-    await this.emailInput.type(email);
-    await this.firstNameInput.type(firstName);
-    await this.lastNameInput.type(lastName);
+    await this.fillUserForm(userRegData);
   }
   async clickCreateUserBtn() {
     await this.createUserBtn.click();
@@ -19,10 +16,7 @@ export default class CreateUserPage extends BasePage {
   }
   async checkCreateUserPageIsCorrect() {
     await expect(this.page).toHaveURL(/users\/create/);
-    await expect(this.emailInput).toBeVisible();
-    await expect(this.firstNameInput).toBeVisible();
-    await expect(this.lastNameInput).toBeVisible();
-    await expect(this.saveUserBtn).toBeVisible();
+    await this.checkUserFormIsVisible();
     await expect(this.saveUserBtn).toBeDisabled();
   }
 }
