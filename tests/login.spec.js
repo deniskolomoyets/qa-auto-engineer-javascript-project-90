@@ -7,7 +7,7 @@ test.beforeEach('Login form', ({ page }) => {
   authPage.login();
 });
 
-test('registration successful', async ({ page }) => {
+test('login successful', async ({ page }) => {
   await expect(page).toHaveURL('/#/');
   await expect(page.getByText('Jane Doe')).toBeVisible();
   await expect(
