@@ -1,73 +1,86 @@
-import { test } from '@playwright/test';
-import { userRegData } from './data/userRegData';
-
-import UsersPage from '../pages/UsersPage';
-import CreateUserPage from '../pages/CreateUserPage';
-import EditUserPage from '../pages/EditUserPage';
+import { test } from './fixture/main';
+import { generateUserData} from './data/generateUserData';
+import { BUTTONS } from './data/buttonSelectors';
 
 test.describe('Test users page', () => {
-  let usersPage;
-  let createUserPage;
-  let editUserPage;
 
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    usersPage = new UsersPage(page);
-    createUserPage = new CreateUserPage(page);
-    editUserPage = new EditUserPage(page);
-    await usersPage.login();
-    await usersPage.openUsersPage();
+  test.beforeEach(async ({ app: { basePage } }) => {
+    await basePage.clickButton(BUTTONS.USERS);
   });
 
-  test('users list is visible and correct', async () => {
-    await usersPage.checkUsersListIsVisible();
-    await usersPage.checkAllEmailsAreVisible();
-    await usersPage.checkAllFirstNamesAreVisible();
-    await usersPage.checkAllLastNamesAreVisible();
+  test('Users data is displayed correctly', async ({ app: { usersPage } }) => {
+    await usersPage.checkUsersData();
+  });
   });
 
-  test('Create user page is visible and correct', async () => {
-    await createUserPage.clickCreateUserBtn();
-    await createUserPage.checkCreateUserPageIsCorrect();
+test.describe('Create user page', async () => {
+
+    test('Check create user page display', async ({
+      app: { usersPage, basePage },
+    }) => {
+      await basePage.clickButton(BUTTONS.CREATE);
+      await usersPage.checkCreateUserForm();
+    });
+
+    test('Create new user correctly', async ({
+      app: { usersPage, basePage },
+    }) => {
+      const userRegData = generateUserData();
+      await basePage.clickButton(BUTTONS.CREATE);
+      await usersPage.createUser(userRegData);
+      await basePage.clickButton(BUTTONS.USERS);
+      await usersPage.checkUserCreatedSuccessfully(userRegData);
+    });
+
+    test('Create user with incorrect email and check alert', async ({
+      app: { usersPage, basePage },
+    }) => {
+      const userRegData = generateUserData();
+      await basePage.clickButton(BUTTONS.CREATE);
+      await usersPage.createUserWithIncorrectEmail(userRegData);
+    });
   });
 
-  test('create user and check success', async () => {
-    await createUserPage.clickCreateUserBtn();
-    await createUserPage.createUser(userRegData);
-    await createUserPage.clickSaveUserBtn();
-    await usersPage.openUsersPage();
-    await usersPage.checkUserCreatedSuccessfully(userRegData);
+test.describe('Edit user', async () => {
+    test('Edit user page is visible and correct', async ({
+      app: { usersPage, baseDataPage, basePage },
+    }) => {
+      await baseDataPage.clickRow();
+      await usersPage.checkEditUserForm();
+      await basePage.checkButtonVisible(BUTTONS.SAVE);
+      await basePage.checkButtonDisabled(BUTTONS.SAVE);
+      await basePage.checkButtonVisible(BUTTONS.DELETE);
+      await basePage.checkButtonVisible(BUTTONS.SHOW);
+    });
+
+    test('Update user data and check success', async ({
+      app: { baseDataPage, basePage, usersPage },
+    }) => {
+      const userRegData = generateUserData();
+      await baseDataPage.clickRow(2);
+      await usersPage.createUser(userRegData);
+
+      await basePage.clickButton(BUTTONS.USERS);
+      await usersPage.checkUserUpdateSuccessfully(2, userRegData);
+    });
   });
 
-  test('Edit user page is visible and correct', async () => {
-    await editUserPage.clickEditUserBtn();
-    await editUserPage.checkEditUserPageIsCorrect();
-    await editUserPage.checkEditUserForm('john@google.com', 'John', 'Doe');
-  });
+test.describe('Delete user', async () => {
+    test('delete user and check success', async ({
+      app: { baseDataPage, basePage, usersPage },
+    }) => {
+      await baseDataPage.clickRow();
+      await basePage.clickButton(BUTTONS.DELETE);
+      await basePage.clickButton(BUTTONS.USERS);
+      await usersPage.verifyUserIsDeleted(['john@google.com', 'John', 'Doe']);
+    });
 
-  test('edit user and check success', async () => {
-    await editUserPage.clickEditUserBtn();
-    await editUserPage.editUser(userRegData);
-    await usersPage.openUsersPage();
-    await usersPage.checkUserUpdateSuccessfully(userRegData);
+    test('delete all users and check success', async ({
+      app: { baseDataPage, basePage },
+    }) => {
+      await baseDataPage.clickSelectAll();
+      await baseDataPage.allItemsSelectedCorrectly();
+      await basePage.clickButton(BUTTONS.DELETE);
+      await baseDataPage.checkAllItemsDeleted();
+    });
   });
-
-  test('delete two user and check success', async () => {
-    await usersPage.deleteTwoUsers();
-    await usersPage.openUsersPage();
-    await usersPage.verifyUserIsDeleted('john@google.com');
-    await usersPage.verifyUserIsDeleted('emily@example.com');
-  });
-
-  test('delete all users and check success', async () => {
-    await usersPage.deleteAllUsers();
-    await usersPage.checkAllUsersDeleted();
-  });
-
-  test('delete one user and check success', async () => {
-    await editUserPage.clickEditUserBtn();
-    await usersPage.clickDeleteUser();
-    await usersPage.openUsersPage();
-    await usersPage.verifyUserIsDeleted('john@google.com');
-  });
-});

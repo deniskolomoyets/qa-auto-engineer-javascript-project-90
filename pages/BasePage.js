@@ -1,54 +1,36 @@
-
 import { expect } from '@playwright/test';
+import { PageHolder } from './PageHolder';
 
-export default class BasePage {
+export class BasePage extends PageHolder {
   constructor(page) {
-    this.page = page;
-    this.usernameInput = this.page.getByRole('textbox', { name: 'username' });
-    this.passwordInput = this.page.getByRole('textbox', { name: 'password' });
-    this.usersBtn = this.page.getByRole('menuitem', { name: 'Users' });
-
-    this.createUserBtn = this.page.getByRole('link', { name: 'Create' });
-    this.saveUserBtn = this.page.getByRole('button', { name: 'Save' });
-    this.deleteUserBtn = this.page.getByRole('button', { name: 'Delete' });
-    this.emailInput = this.page.locator('[name="email"]');
-    this.firstNameInput = this.page.locator('[name="firstName"]');
-    this.lastNameInput = this.page.locator('[name="lastName"]');
-
+    super(page);
+    this.form = this.page.locator('form');
+    this.rows = this.page.locator('tbody tr');
+    this.idColumns = this.page.locator('.column-id');
+    this.nameColumns = this.page.locator('.column-name');
     this.allCheckboxes = this.page.getByLabel('Select All');
     this.rowCheckBox = this.page.getByLabel('Select this row');
-    this.rows = this.page.locator('tbody tr');
-    this.signinBtn = this.page.getByRole('button', { name: /Sign in/i });
-  }
-  async openUsersPage() {
-    await this.usersBtn.click();
-  }
-  async clickAllCheckBox() {
-    await this.allCheckboxes.click();
+    this.itemsSelected = this.page.getByRole('heading', {
+      name: 'items selected',
+    });
   }
 
-  async clickDeleteUser() {
-    await this.deleteUserBtn.click();
+  async clickButton(item) {
+    await this.page.getByRole(item.role, { name: item.name }).click();
   }
-
-  // Общие методы для работы с формами пользователей
-  async fillUserForm(userRegData) {
-    const { email, firstName, lastName } = userRegData;
-    await this.emailInput.fill(email);
-    await this.firstNameInput.fill(firstName);
-    await this.lastNameInput.fill(lastName);
+  async checkButtonVisible(item) {
+    await expect(
+      this.page.getByRole(item.role, { name: item.name }),
+    ).toBeVisible();
   }
-
-  async checkUserFormIsVisible() {
-    await expect(this.emailInput).toBeVisible();
-    await expect(this.firstNameInput).toBeVisible();
-    await expect(this.lastNameInput).toBeVisible();
-    await expect(this.saveUserBtn).toBeVisible();
+  async checkButtonNotVisible(item) {
+    await expect(
+      this.page.getByRole(item.role, { name: item.name }),
+    ).not.toBeVisible();
   }
-
-  async checkUserFormValues(email, firstName, lastName) {
-    expect(await this.emailInput.getAttribute('value')).toContain(email);
-    expect(await this.firstNameInput.getAttribute('value')).toContain(firstName);
-    expect(await this.lastNameInput.getAttribute('value')).toContain(lastName);
+  async checkButtonDisabled(item) {
+    await expect(
+      this.page.getByRole(item.role, { name: item.name }),
+    ).toBeDisabled();
   }
 }

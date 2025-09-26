@@ -1,28 +1,24 @@
 import { expect } from '@playwright/test';
-import BasePage from './BasePage';
+import { BasePage } from './BasePage';
+import { Inputs } from '../tests/components/Inputs';
 
-export default class EditUserPage extends BasePage {
+export class EditUserPage extends BasePage {
   constructor(page) {
     super(page);
-    this.row = this.page.locator('tbody tr');
+    this.inputs = new Inputs(page);
   }
 
-  async clickEditUserBtn() {
-    await this.row.first().click();
-  }
   async editUser(userRegData) {
-    await this.fillUserForm(userRegData);
-    await this.saveUserBtn.click();
+    const { email, firstName, lastName } = userRegData;
+    await this.inputs.emailInput.fill(email);
+    await this.inputs.firstNameInput.fill(firstName);
+    await this.inputs.lastNameInput.fill(lastName);
   }
 
-  async checkEditUserPageIsCorrect() {
-    await this.checkUserFormIsVisible();
-    await expect(this.saveUserBtn).toBeDisabled();
-    await expect(this.deleteUserBtn).toBeVisible();
-    await expect(this.deleteUserBtn).toBeEnabled();
-  }
-
-  async checkEditUserForm(email, firstName, lastName) {
-    await this.checkUserFormValues(email, firstName, lastName);
+ async editUser(userRegData) {
+    const { email, firstName, lastName } = userRegData;
+    await this.inputs.emailInput.fill(email);
+    await this.inputs.firstNameInput.fill(firstName);
+    await this.inputs.lastNameInput.fill(lastName);
   }
 }
