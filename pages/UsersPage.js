@@ -1,100 +1,156 @@
-import { expect } from '@playwright/test';
-import { BasePage } from './BasePage';
+import { expect } from "@playwright/test";
+import { BUTTONS } from "../tests/data/buttonSelectors";
+import { BaseDataPage } from "./BaseDataPage";
+import { generateUserData } from "../tests/data/generateUserData";
 
-export  class UsersPage extends BasePage {
+export class UsersPage extends BaseDataPage {
   constructor(page) {
     super(page);
-    this.usersList = this.page.locator('table');
-    this.emailCell = this.page.locator('tbody .column-email');
-    this.firstNameCell = this.page.locator('tbody .column-firstName');
-    this.lastNameCell = this.page.locator('tbody .column-lastName');
   }
 
-  async checkUsersListIsVisible() {
-    await expect(this.usersList).toBeVisible();
+  async checkCreateUserForm() {
+    await this.checkForm([
+      this.emailInput,
+      this.firstNameInput,
+      this.lastNameInput,
+    ]);
+    await this.checkButtonVisible(BUTTONS.SAVE);
+    await this.checkButtonDisabled(BUTTONS.SAVE);
   }
-
-  async checkEmailsVisibility() {
-    const emails = await this.emailCell.all();
-    for (const email of emails) {
-      await expect(email).toBeVisible();
-    }
+  async createUser(userRegData) {
+    await this.fillForm(userRegData, [
+      this.emailInput,
+      this.firstNameInput,
+      this.lastNameInput,
+    ]);
   }
-
-  async checkFirstNamesVisibility() {
-    const firstNames = await this.firstNameCell.all();
-    for (const name of firstNames) {
-      await expect(name).toBeVisible();
-    }
-  }
-
-  async checkLastNamesVisibility() {
-    const lastNames = await this.lastNameCell.all();
-    for (const name of lastNames) {
-      await expect(name).toBeVisible();
-    }
+  async createUserWithIncorrectEmail(userRegData) {
+    const incorrectData = { ...userRegData, email: "qwerty" };
+    await this.fillForm(incorrectData, [
+      this.emailInput,
+      this.firstNameInput,
+      this.lastNameInput,
+    ]);
+    await expect(this.alert).toBeVisible();
   }
 
   async checkUsersData() {
-    await this.checkEmailsVisibility();
-    await this.checkFirstNamesVisibility();
-    await this.checkLastNamesVisibility();
+    await Promise.all([
+      this.checkTableIsVisible(),
+      this.checkDataCellsVisibility(this.emailCell),
+      this.checkDataCellsVisibility(this.firstNameCell),
+      this.checkDataCellsVisibility(this.lastNameCell),
+    ]);
+  }
+
+  async checkCreateUser() {
+    const userRegData = generateUserData();
+    await this.clickButton(BUTTONS.CREATE);
+    await this.createUser(userRegData);
+    await this.clickButton(BUTTONS.USERS);
+    await this.checkUserCreatedSuccessfully(userRegData);
+  }
+
+  async checkCreateUserWithIncorrectEmail() {
+    const userRegData = generateUserData();
+    await this.clickButton(BUTTONS.CREATE);
+    await this.createUserWithIncorrectEmail(userRegData);
+    await this.clickButton(BUTTONS.USERS);
+  }
+
+  async checkEditUserPage() {
+    await this.clickRow();
+    await Promise.all([
+      this.checkEditUserForm(),
+      this.checkButtonVisible(BUTTONS.SAVE),
+      this.checkButtonDisabled(BUTTONS.SAVE),
+      this.checkButtonVisible(BUTTONS.DELETE),
+      this.checkButtonVisible(BUTTONS.SHOW),
+    ]);
+  }
+
+  async checkUpdateUserData() {
+    const userRegData = generateUserData();
+    await this.clickButton(BUTTONS.USERS);
+    await this.clickRow(2);
+    await this.createUser(userRegData);
+    await this.clickButton(BUTTONS.USERS);
+    await this.checkUserUpdateSuccessfully(2, userRegData);
+  }
+
+  async checkDeleteUser() {
+    await this.clickRow();
+    await this.clickButton(BUTTONS.DELETE);
+    await this.clickButton(BUTTONS.USERS);
+    await this.verifyUserIsDeleted(["john@google.com", "John", "Doe"]);
+  }
+
+  async checkDeleteAllUser() {
+    await this.clickSelectAll();
+    await this.allItemsSelectedCorrectly();
+    await this.clickButton(BUTTONS.DELETE);
+    await this.checkAllItemsDeleted();
+  }
+
+  async checkCreateUserForm() {
+    await this.clickButton(BUTTONS.CREATE),
+      await Promise.all([
+        this.checkForm([
+          this.emailInput,
+          this.firstNameInput,
+          this.lastNameInput,
+        ]),
+        this.checkButtonVisible(BUTTONS.SAVE),
+        this.checkButtonDisabled(BUTTONS.SAVE),
+      ]);
+  }
+  async createUser(userRegData) {
+    await this.fillForm(userRegData, [
+      this.emailInput,
+      this.firstNameInput,
+      this.lastNameInput,
+    ]);
+    await this.clickButton(BUTTONS.SAVE);
+  }
+  async createUserWithIncorrectEmail(userRegData) {
+    const incorrectData = { ...userRegData, email: "qwerty" };
+    await this.fillForm(incorrectData, [
+      this.emailInput,
+      this.firstNameInput,
+      this.lastNameInput,
+    ]);
+    await this.clickButton(BUTTONS.SAVE);
+    await expect(this.alert).toBeVisible();
   }
 
   async checkUserCreatedSuccessfully(userRegData) {
-    const { email, firstName, lastName } = userRegData;
-    const newUserEmail = await this.emailCell.last().innerText();
-    const newUserFirstName = await this.firstNameCell.last().innerText();
-    const newUserLastName = await this.lastNameCell.last().innerText();
-    expect(newUserEmail).toContain(email);
-    expect(newUserFirstName).toContain(firstName);
-    expect(newUserLastName).toContain(lastName);
+    await this.checkItemCreatedSuccessfully(userRegData, {
+      email: this.emailCell,
+      firstName: this.firstNameCell,
+      lastName: this.lastNameCell,
+    });
+  }
+  async checkEditUserForm() {
+    await this.checkForm([
+      this.emailInput,
+      this.firstNameInput,
+      this.lastNameInput,
+    ]);
   }
 
-  async checkUserUpdateSuccessfully(userRegData) {
-    const { email, firstName, lastName } = userRegData;
-    const newUserEmail = await this.emailCell.first().innerText();
-    const newUserFirstName = await this.firstNameCell.first().innerText();
-    const newUserLastName = await this.lastNameCell.first().innerText();
-    expect(newUserEmail).toContain(email);
-    expect(newUserFirstName).toContain(firstName);
-    expect(newUserLastName).toContain(lastName);
+  async checkUserUpdateSuccessfully(id, userRegData) {
+    await this.checkItemUpdateSuccessfully(id, userRegData, {
+      email: this.emailCell,
+      firstName: this.firstNameCell,
+      lastName: this.lastNameCell,
+    });
   }
 
-  async verifyUserIsDeleted(userEmail) {
-    const deletedUserEmail = await this.emailCell.getByText(userEmail);
-    await expect(deletedUserEmail).not.toBeVisible();
-  }
-
-  async selectUser(count = 1) {
-    const countOfRows = await this.rows.count();
-    if (count < 1 || count > countOfRows) {
-      throw new Error('Invalid user count');
-    }
-    await this.rowCheckBox.nth(count - 1).click();
-  }
-
-  async deleteTwoUsers() {
-    await this.selectUser(1);
-    await this.selectUser(2);
-    await this.clickDeleteUser();
-  }
-
-  async checkAllUsersChecked() {
-    const checkedCheckboxes = await this.page
-      .getByRole('checkbox', { checked: true })
-      .count();
-    expect(await this.itemsSelected.innerText()).toContain(
-      checkedCheckboxes.toString(),
-    );
-  }
-
-  async deleteAllUsers() {
-    await this.clickAllCheckBox();
-    await this.clickDeleteUser();
-  }
-  async checkAllUsersDeleted() {
-    await expect(this.rows).toHaveCount(0);
-    
+  async verifyUserIsDeleted(userData) {
+    await this.verifyItemIsDeleted(userData, {
+      email: this.emailCell,
+      firstName: this.firstNameCell,
+      lastName: this.lastNameCell,
+    });
   }
 }

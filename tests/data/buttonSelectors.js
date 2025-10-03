@@ -5,10 +5,13 @@ export const BUTTONS = {
   LABELS: { role: 'menuitem', name: 'Labels' },
   STATUSES: { role: 'menuitem', name: 'Task statuses' },
   CREATE: { role: 'link', name: 'Create' },
+  EDIT: { role: 'link', name: 'Edit' },
   EXPORT: { role: 'button', name: 'Export' },
   CLOSE_MENU: { role: 'button', name: 'Close menu' },
   THEME_TOGGLE: { role: 'button', name: 'Toggle light/dark mode' },
   SAVE: { role: 'button', name: 'Save' },
   DELETE: { role: 'button', name: 'Delete' },
   SHOW: { role: 'link', name: 'Show' },
+  PROFILE: { role: 'button', name: 'Profile' },
+  LOGOUT: { role: 'menuitem', name: 'Logout' },
 };

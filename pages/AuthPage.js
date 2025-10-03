@@ -1,5 +1,6 @@
 import { BasePage } from './BasePage';
 import { expect } from '@playwright/test';
+import { BUTTONS } from '../tests/data/buttonSelectors';
 
 export class AuthPage extends BasePage {
   constructor(page) {
@@ -33,6 +34,10 @@ export class AuthPage extends BasePage {
     await this.LoginFormUserName.fill('TestUser');
     await this.LoginFormPassword.fill('12345');
     await this.signInBtn.click();
+  }
+  async logOut() {
+    await this.clickButton(BUTTONS.PROFILE);
+    await this.clickButton(BUTTONS.LOGOUT);
   }
   async open() {
     await this.page.goto(this.url);

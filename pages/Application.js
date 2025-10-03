@@ -1,11 +1,12 @@
-import { AuthPage } from './AuthPage';
-import { UsersPage } from './UsersPage';
-import { CreateUserPage } from './CreateUserPage';
-import { EditUserPage } from './EditUserPage';
-import { PageHolder } from './PageHolder';
-import { BasePage } from './BasePage';
-import { DataFormPage } from './DataFormPage';
-import { BaseDataPage } from './BaseDataPage';
+import { AuthPage } from "./AuthPage";
+import { UsersPage } from "./UsersPage";
+import { PageHolder } from "./PageHolder";
+import { BasePage } from "./BasePage";
+import { BaseDataPage } from "./BaseDataPage";
+import { StatusesPage } from "./StatusesPage";
+import { LabelsPage } from "./LabelsPage";
+import { BaseTasksPage } from "./BaseTasksPage";
+import { TaskPage } from "./TaskPage";
 
 export class Application extends PageHolder {
   constructor(page) {
@@ -13,9 +14,10 @@ export class Application extends PageHolder {
     this.basePage = new BasePage(page);
     this.authPage = new AuthPage(page);
     this.usersPage = new UsersPage(page);
-    this.createUserPage = new CreateUserPage(page);
-    this.editUserPage = new EditUserPage(page);
-    this.dataFormPage = new DataFormPage(page);
     this.baseDataPage = new BaseDataPage(page);
+    this.statusesPage = new StatusesPage(page);
+    this.labelsPage = new LabelsPage(page);
+    this.baseTasksPage = new BaseTasksPage(page);
+    this.taskPage = new TaskPage(page);
   }
 }
