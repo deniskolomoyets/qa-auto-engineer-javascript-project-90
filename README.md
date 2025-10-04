@@ -1,12 +1,34 @@
-# React + Vite
+### Hexlet tests and linter status:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![Actions Status](https://github.com/deniskolomoyets//qa-auto-engineer-javascript-project-90/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/FreeS777/qa-auto-engineer-javascript-project-90/actions)
 
-Currently, two official plugins are available:
+## Project Description
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project is an automated test suite for a Kanban board application built with **react-admin**, using **Playwright**. The tests verify the main functionalities: creating, editing, deleting, and moving tasks, as well as user authentication.
 
-## Expanding the ESLint configuration
+### Key Features:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Task Management** – create, edit, delete, change task statuses ("draft", "in progress", "done").
+- **Users** – create and view users (for admins).
+- **Labels** – create and edit labels for tasks ("bug", "feature", etc.).
+- **Task Statuses** – configure columns on the Kanban board.
+
+## Installation and Setup
+
+### Install dependencies:
+
+```
+npm ci
+```
+
+### Run the application:
+
+```
+npm run dev
+```
+
+### Run tests:
+
+```
+npm test
+```
