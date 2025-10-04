@@ -1,6 +1,6 @@
 ### Hexlet tests and linter status:
 
-[![Actions Status](https://github.com/deniskolomoyets//qa-auto-engineer-javascript-project-90/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/FreeS777/qa-auto-engineer-javascript-project-90/actions)
+[![Actions Status](https://github.com/deniskolomoyets//qa-auto-engineer-javascript-project-90/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/deniskolomoyets/qa-auto-engineer-javascript-project-90/actions)
 
 ## Project Description
 
