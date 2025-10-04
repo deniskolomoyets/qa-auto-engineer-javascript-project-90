@@ -1,6 +1,5 @@
 // @ts-check
-// @ts-ignore
-import { defineConfig, devices } from "@playwright/test";
+const { defineConfig, devices } = require("@playwright/test");
 
 /**
  * Read environment variables from file.
@@ -74,6 +73,7 @@ module.exports = defineConfig({
   webServer: {
     command: "npm run dev",
     url: "http://localhost:5173",
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI, // Reuse server only if not in CI
+    timeout: 120 * 1000, // Increased timeout
   },
 });
