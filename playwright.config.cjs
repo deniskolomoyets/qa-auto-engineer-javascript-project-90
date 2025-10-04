@@ -1,5 +1,5 @@
 // @ts-check
-const { defineConfig, devices } = require("@playwright/test");
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Read environment variables from file.
@@ -25,7 +25,7 @@ module.exports = defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173/',
+    baseURL: "http://localhost:5173",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -39,13 +39,13 @@ module.exports = defineConfig({
     },
 
     // {
-    //   name: "firefox",
-    //   use: { ...devices["Desktop Firefox"] },
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
     // },
 
     // {
-    //   name: "webkit",
-    //   use: { ...devices["Desktop Safari"] },
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
     // },
 
     /* Test against mobile viewports. */
@@ -73,7 +73,6 @@ module.exports = defineConfig({
   webServer: {
     command: "npm run dev",
     url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    reuseExistingServer: true,
   },
 });
