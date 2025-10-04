@@ -1,10 +1,12 @@
-import { BUTTONS } from "../tests/data/buttonSelectors";
-import { BaseDataPage } from "./BaseDataPage";
-import { generateLabelData } from "../tests/data/generateLabelData";
+import { BasePage } from "./BasePage";
 
-export class LabelsPage extends BaseDataPage {
+export class LabelsPage extends BasePage {
   constructor(page) {
     super(page);
+  }
+
+  get labelsMenuItem() {
+    return this.page.getByRole("menuitem", { name: "Labels" });
   }
 
   async checkLabelsData() {
@@ -13,19 +15,18 @@ export class LabelsPage extends BaseDataPage {
   }
 
   async checkCreateLabelsForm() {
-    await this.clickButton(BUTTONS.CREATE);
+    await this.createButton.click();
     await Promise.all([
       this.checkForm([this.nameInput]),
-      this.checkButtonVisible(BUTTONS.SAVE),
-      this.checkButtonDisabled(BUTTONS.SAVE),
+      this.checkButtonVisible(this.saveButton),
+      this.checkButtonDisabled(this.saveButton),
     ]);
   }
 
-  async checkCreateNewLabel() {
-    const labelData = generateLabelData();
-    await this.clickButton(BUTTONS.CREATE);
+  async checkCreateNewLabel(labelData) {
+    await this.createButton.click();
     await this.createLabel(labelData);
-    await this.clickButton(BUTTONS.LABELS);
+    await this.labelsMenuItem.click();
     await this.checkLabelCreatedSuccessfully(labelData);
   }
 
@@ -33,38 +34,39 @@ export class LabelsPage extends BaseDataPage {
     await this.clickRow();
     await Promise.all([
       await this.checkEditLabelForm(),
-      await this.checkButtonVisible(BUTTONS.SAVE),
-      await this.checkButtonDisabled(BUTTONS.SAVE),
-      await this.checkButtonVisible(BUTTONS.DELETE),
-      await this.checkButtonVisible(BUTTONS.SHOW),
+      await this.checkButtonVisible(this.saveButton),
+      await this.checkButtonDisabled(this.saveButton),
+      await this.checkButtonVisible(this.deleteButton),
+      await this.checkButtonVisible(this.showButton),
     ]);
   }
 
-  async checkUpdateLabel() {
-    const labelData = generateLabelData();
-    await this.clickRow(4);
+  async checkUpdateLabel(rowId, labelData) {
+    await this.clickRow(rowId);
     await this.createLabel(labelData);
-    await this.clickButton(BUTTONS.LABELS);
-    await this.checkLabelUpdateSuccessfully(4, labelData);
+    await this.labelsMenuItem.click();
+    await this.checkLabelUpdateSuccessfully(rowId, labelData);
   }
 
-  async checkDeleteLabel() {
+  async checkDeleteLabel(label) {
     await this.clickRow();
-    await this.clickButton(BUTTONS.DELETE);
-    await this.clickButton(BUTTONS.STATUSES);
-    await this.verifyLabelIsDeleted(["bug"]);
+    await this.deleteButton.click();
+    await this.statusesMenuItem.click();
+    await this.checkLabelIsDeleted(label);
   }
 
   async checkDeleteAllLabels() {
     await this.clickSelectAll();
     await this.allItemsSelectedCorrectly();
-    await this.clickButton(BUTTONS.DELETE);
+    await this.deleteButton.click();
+    // Добавить ожидание загрузки
+    await this.page.waitForTimeout(1000);
     await this.checkAllItemsDeleted();
   }
 
   async createLabel(label) {
-    await this.fillForm(label, [this.nameInput]);
-    await this.clickButton(BUTTONS.SAVE);
+    await this.fillInputsForm(label, { name: this.nameInput });
+    await this.saveButton.click();
   }
   async checkLabelCreatedSuccessfully(label) {
     await this.checkItemCreatedSuccessfully(label, {
@@ -80,8 +82,8 @@ export class LabelsPage extends BaseDataPage {
       name: this.nameCell,
     });
   }
-  async verifyLabelIsDeleted(labelName) {
-    await this.verifyItemIsDeleted(labelName, {
+  async checkLabelIsDeleted(labelName) {
+    await this.checkItemIsDeleted(labelName, {
       name: this.nameCell,
     });
   }

@@ -1,37 +1,24 @@
 import { expect } from "@playwright/test";
-import { BUTTONS } from "../tests/data/buttonSelectors";
-import { BaseDataPage } from "./BaseDataPage";
-import { generateUserData } from "../tests/data/generateUserData";
+import { BasePage } from "./BasePage";
 
-export class UsersPage extends BaseDataPage {
+export class UsersPage extends BasePage {
   constructor(page) {
     super(page);
+    this.emailInput = this.page.getByRole("textbox", { name: "Email" });
+    this.firstNameInput = this.page.getByRole("textbox", {
+      name: "First name",
+    });
+    this.lastNameInput = this.page.getByRole("textbox", { name: "Last name" });
+    this.emailCell = this.page.locator("tbody .column-email");
+    this.firstNameCell = this.page.locator("tbody .column-firstName");
+    this.lastNameCell = this.page.locator("tbody .column-lastName");
+    this.alert = this.page.getByText(
+      "The form is not valid. Please check for errors"
+    );
   }
 
-  async checkCreateUserForm() {
-    await this.checkForm([
-      this.emailInput,
-      this.firstNameInput,
-      this.lastNameInput,
-    ]);
-    await this.checkButtonVisible(BUTTONS.SAVE);
-    await this.checkButtonDisabled(BUTTONS.SAVE);
-  }
-  async createUser(userRegData) {
-    await this.fillForm(userRegData, [
-      this.emailInput,
-      this.firstNameInput,
-      this.lastNameInput,
-    ]);
-  }
-  async createUserWithIncorrectEmail(userRegData) {
-    const incorrectData = { ...userRegData, email: "qwerty" };
-    await this.fillForm(incorrectData, [
-      this.emailInput,
-      this.firstNameInput,
-      this.lastNameInput,
-    ]);
-    await expect(this.alert).toBeVisible();
+  get usersMenuButton() {
+    return this.page.getByRole("menuitem", { name: "Users" });
   }
 
   async checkUsersData() {
@@ -43,88 +30,89 @@ export class UsersPage extends BaseDataPage {
     ]);
   }
 
-  async checkCreateUser() {
-    const userRegData = generateUserData();
-    await this.clickButton(BUTTONS.CREATE);
-    await this.createUser(userRegData);
-    await this.clickButton(BUTTONS.USERS);
-    await this.checkUserCreatedSuccessfully(userRegData);
+  async checkCreateUser(userData) {
+    await this.createButton.click();
+    await this.createUser(userData);
+    await this.usersMenuButton.click();
+    await this.checkUserCreatedSuccessfully(userData);
   }
 
-  async checkCreateUserWithIncorrectEmail() {
-    const userRegData = generateUserData();
-    await this.clickButton(BUTTONS.CREATE);
-    await this.createUserWithIncorrectEmail(userRegData);
-    await this.clickButton(BUTTONS.USERS);
+  async checkCreateUserWithIncorrectEmail(userData) {
+    await this.createButton.click();
+    await this.createUserWithIncorrectEmail(userData);
+    await this.usersMenuButton.click();
   }
 
   async checkEditUserPage() {
     await this.clickRow();
     await Promise.all([
       this.checkEditUserForm(),
-      this.checkButtonVisible(BUTTONS.SAVE),
-      this.checkButtonDisabled(BUTTONS.SAVE),
-      this.checkButtonVisible(BUTTONS.DELETE),
-      this.checkButtonVisible(BUTTONS.SHOW),
+      this.checkButtonVisible(this.saveButton),
+      this.checkButtonDisabled(this.saveButton),
+      this.checkButtonVisible(this.deleteButton),
+      this.checkButtonVisible(this.showButton),
     ]);
   }
 
-  async checkUpdateUserData() {
-    const userRegData = generateUserData();
-    await this.clickButton(BUTTONS.USERS);
-    await this.clickRow(2);
-    await this.createUser(userRegData);
-    await this.clickButton(BUTTONS.USERS);
-    await this.checkUserUpdateSuccessfully(2, userRegData);
+  async checkUpdateUserData(rowId, userData) {
+    await this.usersMenuButton.click();
+    await this.clickRow(rowId);
+    await this.createUser(userData);
+    await this.usersMenuButton.click();
+    await this.checkUserUpdateSuccessfully(rowId, userData);
   }
 
-  async checkDeleteUser() {
+  async checkDeleteUser(userData) {
     await this.clickRow();
-    await this.clickButton(BUTTONS.DELETE);
-    await this.clickButton(BUTTONS.USERS);
-    await this.verifyUserIsDeleted(["john@google.com", "John", "Doe"]);
+    await this.deleteButton.click();
+    // Добавить ожидание загрузки
+    await this.page.waitForTimeout(1000);
+    await this.usersMenuButton.click();
+    await this.checkUserIsDeleted(userData);
   }
 
   async checkDeleteAllUser() {
     await this.clickSelectAll();
     await this.allItemsSelectedCorrectly();
-    await this.clickButton(BUTTONS.DELETE);
+    await this.deleteButton.click();
+    // Добавить ожидание загрузки
+    await this.page.waitForTimeout(1000);
     await this.checkAllItemsDeleted();
   }
 
   async checkCreateUserForm() {
-    await this.clickButton(BUTTONS.CREATE),
-      await Promise.all([
-        this.checkForm([
-          this.emailInput,
-          this.firstNameInput,
-          this.lastNameInput,
-        ]),
-        this.checkButtonVisible(BUTTONS.SAVE),
-        this.checkButtonDisabled(BUTTONS.SAVE),
-      ]);
-  }
-  async createUser(userRegData) {
-    await this.fillForm(userRegData, [
-      this.emailInput,
-      this.firstNameInput,
-      this.lastNameInput,
+    await this.createButton.click();
+    await Promise.all([
+      this.checkForm([
+        this.emailInput,
+        this.firstNameInput,
+        this.lastNameInput,
+      ]),
+      this.checkButtonVisible(this.saveButton),
+      this.checkButtonDisabled(this.saveButton),
     ]);
-    await this.clickButton(BUTTONS.SAVE);
   }
-  async createUserWithIncorrectEmail(userRegData) {
-    const incorrectData = { ...userRegData, email: "qwerty" };
-    await this.fillForm(incorrectData, [
-      this.emailInput,
-      this.firstNameInput,
-      this.lastNameInput,
-    ]);
-    await this.clickButton(BUTTONS.SAVE);
+  async createUser(userData) {
+    await this.fillInputsForm(userData, {
+      email: this.emailInput,
+      firstName: this.firstNameInput,
+      lastName: this.lastNameInput,
+    });
+    await this.saveButton.click();
+  }
+  async createUserWithIncorrectEmail(userData) {
+    const incorrectData = { ...userData, email: "qwerty" };
+    await this.fillInputsForm(incorrectData, {
+      email: this.emailInput,
+      firstName: this.firstNameInput,
+      lastName: this.lastNameInput,
+    });
+    await this.saveButton.click();
     await expect(this.alert).toBeVisible();
   }
 
-  async checkUserCreatedSuccessfully(userRegData) {
-    await this.checkItemCreatedSuccessfully(userRegData, {
+  async checkUserCreatedSuccessfully(userData) {
+    await this.checkItemCreatedSuccessfully(userData, {
       email: this.emailCell,
       firstName: this.firstNameCell,
       lastName: this.lastNameCell,
@@ -138,16 +126,16 @@ export class UsersPage extends BaseDataPage {
     ]);
   }
 
-  async checkUserUpdateSuccessfully(id, userRegData) {
-    await this.checkItemUpdateSuccessfully(id, userRegData, {
+  async checkUserUpdateSuccessfully(id, userData) {
+    await this.checkItemUpdateSuccessfully(id, userData, {
       email: this.emailCell,
       firstName: this.firstNameCell,
       lastName: this.lastNameCell,
     });
   }
 
-  async verifyUserIsDeleted(userData) {
-    await this.verifyItemIsDeleted(userData, {
+  async checkUserIsDeleted(userData) {
+    await this.checkItemIsDeleted(userData, {
       email: this.emailCell,
       firstName: this.firstNameCell,
       lastName: this.lastNameCell,

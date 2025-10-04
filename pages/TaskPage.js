@@ -1,21 +1,32 @@
-import { BaseTasksPage } from "./BaseTasksPage";
-import { BUTTONS } from "../tests/data/buttonSelectors";
-import { generateTaskData } from "../tests/data/generateTaskData";
 import { expect } from "@playwright/test";
 import { TaskCard } from "../tests/components/TaskCard";
+import { BasePage } from "./BasePage";
 
-export class TaskPage extends BaseTasksPage {
+export class TaskPage extends BasePage {
   constructor(page) {
     super(page);
-    this.taskAssigneeSelect = this.page.getByLabel("Assignee");
     this.taskTitleInput = this.page.getByRole("textbox", { name: "Title" });
     this.taskContentInput = this.page.getByRole("textbox", { name: "Content" });
-    this.taskStatusSelect = this.page.getByRole("textbox", { name: "Status" });
-    this.taskLabelSelect = this.page.getByRole("textbox", { name: "Label" });
+    this.taskTable = this.page.locator(".RaList-content");
+    this.taskCard = this.page.locator(".MuiCard-root");
+    this.filters = this.page.locator(".filter-filed");
+    this.titles = this.page.locator(".RaList-content h6");
+    this.taskCells = this.page.locator(".MuiBox-root.css-1xphtog");
+    this.elements = this.page.locator("[data-rfd-draggable-id]");
+    this.clearValue = this.page.locator('[aria-label="Clear value"]');
+    this.options = this.page.locator('ul[role="listbox"] li[role="option"]');
+  }
+
+  get exportButton() {
+    return this.page.getByRole("button", { name: "Export" });
+  }
+
+  get tasksMenuItem() {
+    return this.page.getByRole("menuitem", { name: "Tasks" });
   }
 
   async getVisibleTasks() {
-    const cards = await this.page.locator(".MuiCard-root").all();
+    const cards = await this.taskCard.all();
     const tasks = await Promise.all(
       cards.map(async (card) => {
         const taskCard = new TaskCard(card);
@@ -27,29 +38,65 @@ export class TaskPage extends BaseTasksPage {
     return tasks;
   }
 
+  async fillSelectOption({ label, value }) {
+    await this.page.getByLabel(label).click();
+
+    if (!value) {
+      await this.clearValue.click();
+    } else {
+      const options = this.options;
+      const values = Array.isArray(value) ? value : [value];
+
+      for (const item of values) {
+        const option = options.locator(`text=${item}`);
+        await option.click();
+      }
+    }
+
+    await this.page.keyboard.press("Escape");
+  }
+
   async addFilters(data) {
-    await this.fillSelectOption("Assignee", data.assignee);
-    await this.fillSelectOption("Status", data.status);
-    await this.fillSelectOption("Label", data.label);
+    await this.fillSelectOption({ label: "Assignee", value: data.assignee });
+    await this.fillSelectOption({ label: "Status", value: data.status });
+    await this.fillSelectOption({ label: "Label", value: data.label });
   }
 
-  async createTask(taskData) {
-    await this.fillSelectOption("Assignee", "alice@hotmail.com");
-    await this.fillForm(taskData, [this.taskTitleInput, this.taskContentInput]);
-    await this.fillSelectOption("Status", "To Publish");
-    await this.fillSelectOption("Label", ["critical", "task"]);
-
-    await this.clickButton(BUTTONS.SAVE);
+  async createTask(
+    taskInputsData,
+    assigneeOptions,
+    statusOptions,
+    labelOptions
+  ) {
+    await this.fillSelectOption(assigneeOptions);
+    await this.fillInputsForm(taskInputsData, {
+      title: this.taskTitleInput,
+      content: this.taskContentInput,
+    });
+    await this.fillSelectOption(statusOptions);
+    await this.fillSelectOption(labelOptions);
+    await this.saveButton.click();
   }
 
-  async checkCreateTask() {
-    await this.clickButton(BUTTONS.CREATE);
-    const taskData = generateTaskData();
-    await this.createTask(taskData);
-    await this.clickButton(BUTTONS.TASKS);
-    const { title, content } = taskData;
-    await this.checkTaskCreatedSuccess(title, content);
-    await this.checkTaskInColumn(taskData.title, taskData.content);
+  async checkCreateTask(
+    taskInputsData,
+    assigneeOptions,
+    statusOptions,
+    labelOptions
+  ) {
+    await this.createButton.click();
+    await this.createTask(
+      taskInputsData,
+      assigneeOptions,
+      statusOptions,
+      labelOptions
+    );
+    await this.tasksMenuItem.click();
+    await this.checkTaskCreatedSuccess(
+      taskInputsData.title,
+      taskInputsData.content
+    );
+    await this.checkTaskInColumn(taskInputsData.title, taskInputsData.content);
   }
 
   async checkTaskCreatedSuccess(title, content) {
@@ -64,21 +111,25 @@ export class TaskPage extends BaseTasksPage {
       this.checkTasksData(),
       this.checkTasksTitles(),
       this.checkTasksFilters(),
-      this.checkButtonVisible(BUTTONS.CREATE),
-      this.checkButtonVisible(BUTTONS.EXPORT),
+      this.checkButtonVisible(this.createButton),
+      this.checkButtonVisible(this.exportButton),
     ]);
   }
   async checkTasksFilters() {
-    const filters = await this.filtres.all();
+    const filters = await this.filters.all();
     for (const filter of filters) {
       await expect(filter).toBeVisible();
     }
   }
 
+  async getColumnData(locator) {
+    return await locator.allTextContents();
+  }
+
   async checkTasksTitles() {
-    await this.clickButton(BUTTONS.STATUSES);
-    const titles = await this.getNames();
-    await this.clickButton(BUTTONS.TASKS);
+    await this.statusesMenuItem.click();
+    const titles = await this.getColumnData(this.nameCell);
+    await this.tasksMenuItem.click();
     const taskTitles = await this.titles.all();
     for (const task of taskTitles) {
       await expect(task).toBeVisible();
@@ -94,17 +145,18 @@ export class TaskPage extends BaseTasksPage {
     }
   }
 
-  async checkEditTask(taskName, assignee, status, label) {
+  async checkEditTask(taskName, taskInputs, assignee, status, label) {
     await this.clickEditTask(taskName);
-    await this.fillSelectOption("Assignee", assignee);
-    const taskData = generateTaskData();
-    await this.fillForm(taskData, [this.taskTitleInput, this.taskContentInput]);
-    await this.fillSelectOption("Status", status);
-    await this.fillSelectOption("Label", label);
-
-    await this.clickButton(BUTTONS.SAVE);
-    await this.clickButton(BUTTONS.TASKS);
-    await this.checkTaskInColumn(taskData.title, taskData.status);
+    await this.fillSelectOption({ label: "Assignee", value: assignee });
+    await this.fillInputsForm(taskInputs, {
+      title: this.taskTitleInput,
+      content: this.taskContentInput,
+    });
+    await this.fillSelectOption({ label: "Status", value: status });
+    await this.fillSelectOption({ label: "Label", value: label });
+    await this.saveButton.click();
+    await this.tasksMenuItem.click();
+    await this.checkTaskInColumn(taskInputs.title, taskInputs.status);
   }
 
   async checkTaskInColumn(taskName, status) {
@@ -117,7 +169,7 @@ export class TaskPage extends BaseTasksPage {
     const task = this.taskTable.filter({ hasText: taskTitle });
     await expect(task).toBeVisible();
     await this.clickEditTask(taskTitle);
-    await this.clickButton(BUTTONS.DELETE);
+    await this.deleteButton.click();
     await expect(task).not.toBeVisible();
   }
 
@@ -152,5 +204,17 @@ export class TaskPage extends BaseTasksPage {
     await expect(
       droppable.locator(`[data-rfd-draggable-id="${taskId}"]`)
     ).toBeVisible();
+  }
+
+  async clickEditTask(taskTitle) {
+    const task = this.taskCard.filter({ hasText: `${taskTitle}` });
+    const editButton = task.getByRole("link", { name: "Edit" });
+    await editButton.click();
+  }
+
+  async clickShowTask(taskTitle) {
+    const task = this.taskCard.filter({ hasText: `${taskTitle}` });
+    const showButton = task.getByRole("link", { name: "Show" });
+    await showButton.click();
   }
 }
